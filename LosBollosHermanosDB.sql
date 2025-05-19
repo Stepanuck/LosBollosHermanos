@@ -4,7 +4,7 @@ Collate Latin1_General_CI_AI
 go
 use LosBollosHermanos
 go
-Create table Categoria(
+Create table Categorias(
 	IDCategoria smallint not null primary key identity (1,1),
 	nombre varchar(50) not null
 )
@@ -20,7 +20,7 @@ Create table Productos(
 	FOREIGN KEY (IDCategoria) references Categoria(IDCategoria)
 )
 go
-Create table DetalleVenta(
+Create table DetallesVenta(
 	IDDetalleVenta int not null primary key identity (1,1),
 	IDVenta int not null,
 	IDProducto int not null,
@@ -57,7 +57,7 @@ go
 	IDEmpleado smallint not null primary key identity (1,1),
 	Nombre varchar(50) not null,
 	Apellido varchar(50) not null,
-	DNI varchar (15) not null,
+	DNI varchar (15) not null UNIQUE CHECK (LEN(DNI) >= 8),
 	Telefono varchar(20),
 	Puesto varchar(30),
 	FechaIngreso datetime not null default getdate(),
