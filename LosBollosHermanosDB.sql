@@ -1,3 +1,4 @@
+
 Create database LosBollosHermanos
 Collate Latin1_General_CI_AI
 
@@ -9,7 +10,6 @@ Create table Categorias(
 	nombre varchar(50) not null
 )
 go
-
 Create table Clientes (
 		IDCliente int not null primary key identity(1,1),
 		Nombre varchar(50) not null,
@@ -22,7 +22,6 @@ Create table Clientes (
 		Activo bit not null default 1
 	)
 go
-
 Create table Empleados(
 	IDEmpleado smallint not null primary key identity (1,1),
 	Nombre varchar(50) not null,
@@ -69,6 +68,8 @@ Create table DetallesVenta(
 go
 --Crear Views--
 
+
+
 CREATE VIEW vw_VentasDetalladas AS
 SELECT
     V.IDVenta,
@@ -95,3 +96,34 @@ SELECT
 FROM DetallesVenta DV
 JOIN Productos P ON DV.IDProducto = P.IDProducto
 GROUP BY P.IDProducto, P.Nombre;
+
+
+CREATE VIEW vw_totalRecaudadoPorVendedor AS
+SELECT
+E.IDEmpleado,
+E.Nombre + ' ' + E.Apellido AS EMPLEADO,
+SUM(DV.Subtotal) AS TotalRecaudado
+FROM Ventas V
+JOIN Empleados E ON V.IDEmpleado = E.IDEmpleado
+JOIN DetallesVenta DV ON V.IDVenta = DV.IDVenta
+GROUP BY E.IDEmpleado, E.Nombre, E.Apellido;
+
+CREATE VIEW vw_totalRecaudadoPorCliente AS
+SELECT
+C.IDCliente,
+C.Nombre + ' ' + C.Apellido AS CLIENTE,
+SUM(DV.Subtotal) AS TotalGastado
+FROM Ventas V
+JOIN Clientes C ON V.IDCliente = C.IDCliente
+JOIN DetallesVenta DV ON V.IDVenta = DV.IDVenta
+GROUP BY C.IDCliente, C.Nombre, C.Apellido;
+
+
+CREATE VIEW vw_productosConStockBajo AS
+Select
+IDProducto,
+Nombre,
+Stock
+from Productos
+Where Stock < 10
+AND Activo = 1;
