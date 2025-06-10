@@ -98,6 +98,7 @@ JOIN Productos P ON DV.IDProducto = P.IDProducto
 GROUP BY P.IDProducto, P.Nombre;
 
 
+
 CREATE VIEW vw_totalRecaudadoPorVendedor AS
 SELECT
 E.IDEmpleado,
@@ -127,3 +128,68 @@ Stock
 from Productos
 Where Stock < 10
 AND Activo = 1;
+
+-- Crear Procedimientos Almacenados.
+--El primer procedimiento almacenado se encargara de Agregar Clientes.
+
+Create Procedure sp_AgregarClientes
+@Nombre varchar(50),
+@Apellido varchar(50),
+@Dni varchar(15),
+@Telefono varchar(20) = Null,
+@Email varchar(100) = Null,
+@Direccion varchar(100) = Null
+As
+Begin
+	Set Nocount on;
+	If Exists (Select 1 From Clientes Where DNI = @Dni)
+	Begin
+		Raiserror('El dni ingresado ya existe en la bd.',16,1);
+		Return;
+	End
+
+	If @Email Is not Null and Exists(Select 1 From Clientes Where Email = @Email)
+	Begin
+		Raiserror('El mail ingresado ya existe en la bd.',16,1);
+		Return;
+	End
+Insert into Clientes(Nombre,Apellido,DNI,Telefono,Email,Direccion)
+Values(@Nombre,@Apellido,@Dni,@Telefono,@Email,@Direccion)
+Print 'Cliente Agregado correctamente';
+End
+
+Go
+
+Create Procedure sp_ListarClientes -- Segundo Sp para listar clientes.
+As
+Begin
+Select * From Clientes
+End
+
+Go
+
+--Agregar Clientes.
+exec sp_AgregarClientes 'Gabriel','Dolce','35982274','47441212','gabriel@alumnos.utn.com','Av Monroe 2020';
+exec sp_AgregarClientes 'Lisandro','Ferreira','31981223','47441234','lisandro@alumnos.utn.com','Av Cabildo 2030';
+exec sp_AgregarClientes 'Valeria', 'Mendoza', '27890123', '1123456789', 'valeria.mendoza@email.com', 'Calle Falsa 123';
+exec sp_AgregarClientes 'Rodrigo', 'Carrizo', '30456789', '1133344455', 'rodrigo.carrizo@email.com', 'Av Siempre Viva 742';
+exec sp_AgregarClientes 'Martina', 'Paredes', '33222111', '1166677788', 'martina.paredes@email.com', 'Pasaje Las Rosas 450';
+exec sp_AgregarClientes 'Tomás', 'Quiroga', '34567123', '1144556677', 'tomas.quiroga@email.com', 'Av Belgrano 1500';
+exec sp_AgregarClientes 'Camila', 'López', '31234567', '1177889900', 'camila.lopez@email.com', 'Calle Mitre 987';
+exec sp_AgregarClientes 'Julián', 'Escobar', '33669988', '1133221100', 'julian.escobar@email.com', 'Boulevard Oroño 202';
+
+Go
+
+exec sp_ListarClientes;
+
+
+Create Procedure sp_BajaCliente
+    @IDCliente int
+as
+Begin
+    Set Nocount On;
+    Update Clientes Set Activo = 0 Where IDCliente = @IDCliente;
+    Print 'Cliente dado de baja.';
+End
+
+Go
