@@ -159,6 +159,58 @@ Print 'Cliente Agregado correctamente';
 End
 
 Go
+CREATE PROCEDURE sp_ModificarCliente
+@IDCliente int,
+@Nombre varchar(50),
+@Apellido varchar(50),
+@Dni varchar(15),
+@Telefono varchar(20) = NULL,
+@Email varchar(100) = NULL,
+@Direccion varchar(100) = NULL
+AS
+BEGIN		
+	SET NOCOUNT ON;
+	--verificamos que exista
+	IF NOT EXISTS (SELECT 1 FROM Clientes WHERE IDCliente = @IDCliente)
+	BEGIN
+	RAISERROR('El cliente no existe.',16,1);
+	RETURN;
+	END
+	--Validaciones
+	IF @Nombre IS NULL OR LTRIM(RTRIM(@Nombre)) = ''
+BEGIN
+		RAISERROR('El nombre no puede estar vacio.',16,1);
+	RETURN;
+END
+	IF @Apellido IS NULL OR LTRIM(RTRIM(@Apellido)) = ''
+BEGIN
+	RAISERROR('El apellido no puede estar vacio.',16,1);
+	RETURN;
+END
+IF @Dni IS NULL OR LTRIM(RTRIM(@Dni)) = ''
+BEGIN
+	RAISERROR('El DNI no puede estar vacio.',16,1);
+	RETURN;
+END
+
+	IF exists (SELECT 1 FROM Clientes WHERE DNI = @Dni AND IDCliente <> @IDCliente)
+	BEGIN
+		RAISERROR ('Ya existe otro cliente con este DNI.',16,1);
+	RETURN;
+END
+	--actualizamos el estado
+	UPDATE Clientes
+	SET Nombre = @Nombre,
+	Apellido = @Apellido,
+	DNI = @Dni,
+	Telefono = @Telefono,
+	Email = @Email,
+	Direccion = @Direccion
+	WHERE IDCliente = @IDCliente;
+	
+	PRINT 'Cliente modificado correctamente.';
+	END
+	GO
 
 Create Procedure sp_ListarClientes -- Segundo Sp para listar clientes.
 As
@@ -193,3 +245,156 @@ Begin
 End
 
 Go
+
+CREATE PROCEDURE sp_AgregarEmpleado
+@Nombre varchar(50),
+@Apellido varchar(50),
+@Dni varchar(15),
+@Telefono varchar(20) = Null,
+@Puesto varchar(30),
+@Sueldo money,
+@NuevoIDEmpleado smallint OUTPUT
+AS
+BEGIN			---LTRIM FUNCION QUE BORRA TODO LOS ESPACIOS EN BLANCO DEL INICIO 
+				---RTRIM FUNCION QUE BORRA TODO LOS ESPACIOS EN BLANCO DEL FINAL
+	SET NOCOUNT ON;
+	IF @Nombre IS NULL OR LTRIM(RTRIM(@Nombre)) = ''
+BEGIN
+		RAISERROR('El nombre no puede estar vacio.',16,1);
+	RETURN;
+END
+	IF @Apellido IS NULL OR LTRIM(RTRIM(@Apellido)) = ''
+BEGIN
+	RAISERROR('El apellido no puede estar vacio.',16,1);
+	RETURN;
+END
+IF @Dni IS NULL OR LTRIM(RTRIM(@Dni)) = ''
+BEGIN
+	RAISERROR('El DNI no puede estar vacio.',16,1);
+	RETURN;
+END
+IF @Puesto IS NULL OR LTRIM(RTRIM(@Puesto)) = ''
+BEGIN
+	RAISERROR('El puesto no puede estar vacio.',16,1);
+	RETURN;
+END
+	IF @Sueldo IS NULL OR @Sueldo <=0
+BEGIN
+	RAISERROR ('El sueldo debe ser mayor de cero.',16,1);
+	RETURN;
+END
+	IF exists (SELECT 1 FROM Empleados WHERE DNI = @Dni)
+	BEGIN
+		RAISERROR ('El DNI ingresado ya existe en la tabla empleados.',16,1);
+	RETURN;
+END
+INSERT INTO Empleados(Nombre, Apellido, DNI, Telefono, Puesto, Sueldo)
+VALUES (@Nombre,@Apellido,@Dni,@Telefono,@Puesto,@Sueldo);
+
+	SET @NuevoIDEmpleado = SCOPE_IDENTITY();
+	PRINT 'Empleado agregado correctamente.';
+	END
+
+
+CREATE PROCEDURE sp_ListarEmpleadosActivos
+AS
+BEGIN
+	SELECT * FROM Empleados WHERE Activo = 1
+END
+
+CREATE PROCEDURE sp_ListarEmpleadosInactivos
+AS
+BEGIN
+	SELECT * FROM Empleados WHERE Activo = 0
+END
+
+CREATE PROCEDURE sp_ModificarEmpleado
+@IDEmpleado smallint,
+@Nombre varchar(50),
+@Apellido varchar(50),
+@Dni varchar(15),
+@Telefono varchar(20) = Null,
+@Puesto varchar(30),
+@Sueldo money
+AS
+BEGIN		
+	SET NOCOUNT ON;
+	--verificamos que exista
+	IF NOT EXISTS (SELECT 1 FROM Empleados WHERE IDEmpleado = @IDEmpleado)
+	BEGIN
+	RAISEERROR('El empleado no existe.',16,1);
+	RETURN;
+	END
+	--Validaciones
+	IF @Nombre IS NULL OR LTRIM(RTRIM(@Nombre)) = ''
+BEGIN
+		RAISERROR('El nombre no puede estar vacio.',16,1);
+	RETURN;
+END
+	IF @Apellido IS NULL OR LTRIM(RTRIM(@Apellido)) = ''
+BEGIN
+	RAISERROR('El apellido no puede estar vacio.',16,1);
+	RETURN;
+END
+IF @Dni IS NULL OR LTRIM(RTRIM(@Dni)) = ''
+BEGIN
+	RAISERROR('El DNI no puede estar vacio.',16,1);
+	RETURN;
+END
+IF @Puesto IS NULL OR LTRIM(RTRIM(@Puesto)) = ''
+BEGIN
+	RAISERROR('El puesto no puede estar vacio.',16,1);
+	RETURN;
+END
+	IF @Sueldo IS NULL OR @Sueldo <=0
+BEGIN
+	RAISERROR ('El sueldo debe ser mayor de cero.',16,1);
+	RETURN;
+END
+	IF exists (SELECT 1 FROM Empleados WHERE DNI = @Dni AND IDEmpleado <> @IDEmpleado)
+	BEGIN
+		RAISERROR ('Ya existe otro empleado con este DNI.',16,1);
+	RETURN;
+END
+	--actualizamos el estado
+	UPDATE Empleados
+	SET Nombre = @Nombre,
+	Apellido = @Apellido,
+	DNI = @Dni,
+	Telefono = @Telefono,
+	Puesto = @Puesto,
+	Sueldo = @Sueldo
+	WHERE IDEmpleado = @IDEmpleado;
+	
+	PRINT 'Empleado modificado correctamente.';
+	END
+
+CREATE PROCEDURE sp_AgregarCategoria
+@Nombre VARCHAR(50),
+@NuevoIDCategoria SMALLINT OUTPUT
+AS
+	BEGIN
+	SET NOCOUNT ON;
+
+	IF @Nombre IS NULL OR LTRIM(RTRIM(@Nombre))=''
+	BEGIN
+		RAISERROR('El nombre de la categoria no puede estar vacio.',16,1);
+		RETURN;
+	END
+
+	IF EXISTS (SELECT 1 FROM Categorias WHERE LOWER(Nombre) = LOWER(@Nombre))
+	BEGIN
+	RAISERROR('Ya existe una categoria con ese nombre.',16,1);
+	RETURN;
+	END
+	INSERT INTO Categorias (nombre)
+	VALUES (@Nombre)
+
+	SET @NuevoIDCategoria = SCOPE_IDENTITY();
+
+	PRINT 'Categoria agregada correctamente.';
+	END
+
+
+
+
