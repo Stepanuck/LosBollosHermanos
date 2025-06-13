@@ -308,6 +308,9 @@ BEGIN
 	SELECT * FROM Empleados WHERE Activo = 0
 END
 
+exec sp_ListarEmpleadosActivos
+exec sp_ListarEmpleadosInactivos
+
 CREATE PROCEDURE sp_ModificarEmpleado
 @IDEmpleado smallint,
 @Nombre varchar(50),
@@ -322,7 +325,7 @@ BEGIN
 	--verificamos que exista
 	IF NOT EXISTS (SELECT 1 FROM Empleados WHERE IDEmpleado = @IDEmpleado)
 	BEGIN
-	RAISEERROR('El empleado no existe.',16,1);
+	RAISERROR('El empleado no existe.',16,1);
 	RETURN;
 	END
 	--Validaciones
@@ -397,4 +400,69 @@ AS
 
 
 
+	-- Necesario para poder pasar varios productos (ID, cantidad, precio) 
+	CREATE TYPE DetallesVentaType AS TABLE (
+    IDProducto INT NOT NULL,
+    Cantidad SMALLINT NOT NULL CHECK (Cantidad > 0),
+    PrecioUnitario MONEY NOT NULL CHECK (PrecioUnitario > 0)
+);
+
+CREATE PROCEDURE sp_AgregarVenta
+    @IDCliente INT,
+    @IDEmpleado SMALLINT,
+    @DetalleVenta DetallesVentaType READONLY,
+    @NuevoIDVenta INT OUTPUT
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    -- Validaciones.
+    IF NOT EXISTS (SELECT 1 FROM Clientes WHERE IDCliente = @IDCliente AND Activo = 1)
+    BEGIN
+        RAISERROR('Cliente no válido o inactivo.', 16, 1);
+        RETURN;
+    END
+
+    IF NOT EXISTS (SELECT 1 FROM Empleados WHERE IDEmpleado = @IDEmpleado AND Activo = 1)
+    BEGIN
+        RAISERROR('Empleado no válido o inactivo.', 16, 1);
+        RETURN;
+    END
+
+    -- Calcular total
+    DECLARE @Total MONEY;
+    SELECT @Total = SUM(Cantidad * PrecioUnitario) FROM @DetalleVenta;
+
+    IF @Total IS NULL OR @Total <= 0
+    BEGIN
+        RAISERROR('El total de la venta no puede ser cero o nulo.', 16, 1);
+        RETURN;
+    END
+
+    -- Insertar venta
+    INSERT INTO Ventas (IDCliente, IDEmpleado, Total)
+    VALUES (@IDCliente, @IDEmpleado, @Total);
+
+    SET @NuevoIDVenta = SCOPE_IDENTITY();
+
+    -- Insertar detalles
+    INSERT INTO DetallesVenta (IDVenta, IDProducto, Cantidad, PrecioUnitario)
+    SELECT @NuevoIDVenta, IDProducto, Cantidad, PrecioUnitario
+    FROM @DetalleVenta;
+
+    PRINT 'Venta registrada correctamente.';
+END
+
+-- Primer Trigger de la BD, para actualizar stock.
+
+CREATE TRIGGER tr_ActualizarStock
+ON DetallesVenta
+AFTER INSERT
+AS
+BEGIN
+    UPDATE P
+    SET Stock = Stock - I.Cantidad
+    FROM Productos P
+    JOIN inserted I ON P.IDProducto = I.IDProducto;
+END;
 
