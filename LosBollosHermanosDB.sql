@@ -86,6 +86,8 @@ JOIN Clientes C ON V.IDCliente = C.IDCliente
 JOIN Empleados E ON V.IDEmpleado = E.IDEmpleado
 JOIN Productos P ON DV.IDProducto = P.IDProducto;
 
+
+
 CREATE VIEW vw_TotalVendidoPorProducto AS
 SELECT 
     P.IDProducto,
@@ -95,3 +97,434 @@ SELECT
 FROM DetallesVenta DV
 JOIN Productos P ON DV.IDProducto = P.IDProducto
 GROUP BY P.IDProducto, P.Nombre;
+<<<<<<< Updated upstream
+=======
+
+
+
+CREATE VIEW vw_totalRecaudadoPorVendedor AS
+SELECT
+E.IDEmpleado,
+E.Nombre + ' ' + E.Apellido AS EMPLEADO,
+SUM(DV.Subtotal) AS TotalRecaudado
+FROM Ventas V
+JOIN Empleados E ON V.IDEmpleado = E.IDEmpleado
+JOIN DetallesVenta DV ON V.IDVenta = DV.IDVenta
+GROUP BY E.IDEmpleado, E.Nombre, E.Apellido;
+
+CREATE VIEW vw_totalRecaudadoPorCliente AS
+SELECT
+C.IDCliente,
+C.Nombre + ' ' + C.Apellido AS CLIENTE,
+SUM(DV.Subtotal) AS TotalGastado
+FROM Ventas V
+JOIN Clientes C ON V.IDCliente = C.IDCliente
+JOIN DetallesVenta DV ON V.IDVenta = DV.IDVenta
+GROUP BY C.IDCliente, C.Nombre, C.Apellido;
+
+
+CREATE VIEW vw_productosConStockBajo AS
+Select
+IDProducto,
+Nombre,
+Stock
+from Productos
+Where Stock < 10
+AND Activo = 1;
+
+Select * from vw_productosConStockBajo;
+
+-- Crear Procedimientos Almacenados.
+--El primer procedimiento almacenado se encargara de Agregar Clientes.
+
+Create Procedure sp_AgregarClientes
+@Nombre varchar(50),
+@Apellido varchar(50),
+@Dni varchar(15),
+@Telefono varchar(20) = Null,
+@Email varchar(100) = Null,
+@Direccion varchar(100) = Null
+As
+Begin
+	Set Nocount on;
+	If Exists (Select 1 From Clientes Where DNI = @Dni)
+	Begin
+		Raiserror('El dni ingresado ya existe en la bd.',16,1);
+		Return;
+	End
+
+	If @Email Is not Null and Exists(Select 1 From Clientes Where Email = @Email)
+	Begin
+		Raiserror('El mail ingresado ya existe en la bd.',16,1);
+		Return;
+	End
+Insert into Clientes(Nombre,Apellido,DNI,Telefono,Email,Direccion)
+Values(@Nombre,@Apellido,@Dni,@Telefono,@Email,@Direccion)
+Print 'Cliente Agregado correctamente';
+End
+
+Go
+CREATE PROCEDURE sp_ModificarCliente
+@IDCliente int,
+@Nombre varchar(50),
+@Apellido varchar(50),
+@Dni varchar(15),
+@Telefono varchar(20) = NULL,
+@Email varchar(100) = NULL,
+@Direccion varchar(100) = NULL
+AS
+BEGIN		
+	SET NOCOUNT ON;
+	--verificamos que exista
+	IF NOT EXISTS (SELECT 1 FROM Clientes WHERE IDCliente = @IDCliente)
+	BEGIN
+	RAISERROR('El cliente no existe.',16,1);
+	RETURN;
+	END
+	--Validaciones
+	IF @Nombre IS NULL OR LTRIM(RTRIM(@Nombre)) = ''
+BEGIN
+		RAISERROR('El nombre no puede estar vacio.',16,1);
+	RETURN;
+END
+	IF @Apellido IS NULL OR LTRIM(RTRIM(@Apellido)) = ''
+BEGIN
+	RAISERROR('El apellido no puede estar vacio.',16,1);
+	RETURN;
+END
+IF @Dni IS NULL OR LTRIM(RTRIM(@Dni)) = ''
+BEGIN
+	RAISERROR('El DNI no puede estar vacio.',16,1);
+	RETURN;
+END
+
+	IF exists (SELECT 1 FROM Clientes WHERE DNI = @Dni AND IDCliente <> @IDCliente)
+	BEGIN
+		RAISERROR ('Ya existe otro cliente con este DNI.',16,1);
+	RETURN;
+END
+	--actualizamos el estado
+	UPDATE Clientes
+	SET Nombre = @Nombre,
+	Apellido = @Apellido,
+	DNI = @Dni,
+	Telefono = @Telefono,
+	Email = @Email,
+	Direccion = @Direccion
+	WHERE IDCliente = @IDCliente;
+	
+	PRINT 'Cliente modificado correctamente.';
+	END
+	GO
+
+Create Procedure sp_ListarClientes -- Segundo Sp para listar clientes.
+As
+Begin
+Select * From Clientes
+End
+
+Go
+
+--Agregar Clientes.
+exec sp_AgregarClientes 'Gabriel','Dolce','35982274','47441212','gabriel@alumnos.utn.com','Av Monroe 2020';
+exec sp_AgregarClientes 'Lisandro','Ferreira','31981223','47441234','lisandro@alumnos.utn.com','Av Cabildo 2030';
+exec sp_AgregarClientes 'Valeria', 'Mendoza', '27890123', '1123456789', 'valeria.mendoza@email.com', 'Calle Falsa 123';
+exec sp_AgregarClientes 'Rodrigo', 'Carrizo', '30456789', '1133344455', 'rodrigo.carrizo@email.com', 'Av Siempre Viva 742';
+exec sp_AgregarClientes 'Martina', 'Paredes', '33222111', '1166677788', 'martina.paredes@email.com', 'Pasaje Las Rosas 450';
+exec sp_AgregarClientes 'Tomás', 'Quiroga', '34567123', '1144556677', 'tomas.quiroga@email.com', 'Av Belgrano 1500';
+exec sp_AgregarClientes 'Camila', 'López', '31234567', '1177889900', 'camila.lopez@email.com', 'Calle Mitre 987';
+exec sp_AgregarClientes 'Julián', 'Escobar', '33669988', '1133221100', 'julian.escobar@email.com', 'Boulevard Oroño 202';
+
+Go
+
+exec sp_ListarClientes;
+
+
+Create Procedure sp_BajaCliente
+    @IDCliente int
+as
+Begin
+    Set Nocount On;
+
+	IF NOT EXISTS (SELECT 1 FROM Clientes WHERE IDCliente = @IDCliente)
+	BEGIN
+		RAISERROR('El cliente no existe.',16,1);
+		RETURN;
+	END
+
+	IF EXISTS (SELECT 1 FROM Clientes WHERE IDCliente = @IDCliente AND Activo = 0)
+	BEGIN
+		RAISERROR('El cliente ya estaba dado de baja.',16,1);
+		RETURN;
+	END
+
+    Update Clientes Set Activo = 0 Where IDCliente = @IDCliente;
+    Print 'Cliente dado de baja.';
+End
+
+Go
+
+CREATE PROCEDURE sp_AgregarEmpleado
+@Nombre varchar(50),
+@Apellido varchar(50),
+@Dni varchar(15),
+@Telefono varchar(20) = Null,
+@Puesto varchar(30),
+@Sueldo money,
+@NuevoIDEmpleado smallint OUTPUT
+AS
+BEGIN			---LTRIM FUNCION QUE BORRA TODO LOS ESPACIOS EN BLANCO DEL INICIO 
+				---RTRIM FUNCION QUE BORRA TODO LOS ESPACIOS EN BLANCO DEL FINAL
+	SET NOCOUNT ON;
+	IF @Nombre IS NULL OR LTRIM(RTRIM(@Nombre)) = ''
+BEGIN
+		RAISERROR('El nombre no puede estar vacio.',16,1);
+	RETURN;
+END
+	IF @Apellido IS NULL OR LTRIM(RTRIM(@Apellido)) = ''
+BEGIN
+	RAISERROR('El apellido no puede estar vacio.',16,1);
+	RETURN;
+END
+IF @Dni IS NULL OR LTRIM(RTRIM(@Dni)) = ''
+BEGIN
+	RAISERROR('El DNI no puede estar vacio.',16,1);
+	RETURN;
+END
+IF @Puesto IS NULL OR LTRIM(RTRIM(@Puesto)) = ''
+BEGIN
+	RAISERROR('El puesto no puede estar vacio.',16,1);
+	RETURN;
+END
+	IF @Sueldo IS NULL OR @Sueldo <=0
+BEGIN
+	RAISERROR ('El sueldo debe ser mayor de cero.',16,1);
+	RETURN;
+END
+	IF exists (SELECT 1 FROM Empleados WHERE DNI = @Dni)
+	BEGIN
+		RAISERROR ('El DNI ingresado ya existe en la tabla empleados.',16,1);
+	RETURN;
+END
+INSERT INTO Empleados(Nombre, Apellido, DNI, Telefono, Puesto, Sueldo)
+VALUES (@Nombre,@Apellido,@Dni,@Telefono,@Puesto,@Sueldo);
+
+	SET @NuevoIDEmpleado = SCOPE_IDENTITY();
+	PRINT 'Empleado agregado correctamente.';
+	END
+
+
+CREATE PROCEDURE sp_ListarEmpleadosActivos
+AS
+BEGIN
+	SELECT * FROM Empleados WHERE Activo = 1
+END
+
+CREATE PROCEDURE sp_ListarEmpleadosInactivos
+AS
+BEGIN
+	SELECT * FROM Empleados WHERE Activo = 0
+END
+
+exec sp_ListarEmpleadosActivos
+exec sp_ListarEmpleadosInactivos
+
+CREATE PROCEDURE sp_ModificarEmpleado
+@IDEmpleado smallint,
+@Nombre varchar(50),
+@Apellido varchar(50),
+@Dni varchar(15),
+@Telefono varchar(20) = Null,
+@Puesto varchar(30),
+@Sueldo money
+AS
+BEGIN		
+	SET NOCOUNT ON;
+	--verificamos que exista
+	IF NOT EXISTS (SELECT 1 FROM Empleados WHERE IDEmpleado = @IDEmpleado)
+	BEGIN
+	RAISERROR('El empleado no existe.',16,1);
+	RETURN;
+	END
+	--Validaciones
+	IF @Nombre IS NULL OR LTRIM(RTRIM(@Nombre)) = ''
+BEGIN
+		RAISERROR('El nombre no puede estar vacio.',16,1);
+	RETURN;
+END
+	IF @Apellido IS NULL OR LTRIM(RTRIM(@Apellido)) = ''
+BEGIN
+	RAISERROR('El apellido no puede estar vacio.',16,1);
+	RETURN;
+END
+IF @Dni IS NULL OR LTRIM(RTRIM(@Dni)) = ''
+BEGIN
+	RAISERROR('El DNI no puede estar vacio.',16,1);
+	RETURN;
+END
+IF @Puesto IS NULL OR LTRIM(RTRIM(@Puesto)) = ''
+BEGIN
+	RAISERROR('El puesto no puede estar vacio.',16,1);
+	RETURN;
+END
+	IF @Sueldo IS NULL OR @Sueldo <=0
+BEGIN
+	RAISERROR ('El sueldo debe ser mayor de cero.',16,1);
+	RETURN;
+END
+	IF exists (SELECT 1 FROM Empleados WHERE DNI = @Dni AND IDEmpleado <> @IDEmpleado)
+	BEGIN
+		RAISERROR ('Ya existe otro empleado con este DNI.',16,1);
+	RETURN;
+END
+	--actualizamos el estado
+	UPDATE Empleados
+	SET Nombre = @Nombre,
+	Apellido = @Apellido,
+	DNI = @Dni,
+	Telefono = @Telefono,
+	Puesto = @Puesto,
+	Sueldo = @Sueldo
+	WHERE IDEmpleado = @IDEmpleado;
+	
+	PRINT 'Empleado modificado correctamente.';
+	END
+
+CREATE PROCEDURE sp_AgregarCategoria
+@Nombre VARCHAR(50),
+@NuevoIDCategoria SMALLINT OUTPUT
+AS
+	BEGIN
+	SET NOCOUNT ON;
+
+	IF @Nombre IS NULL OR LTRIM(RTRIM(@Nombre))=''
+	BEGIN
+		RAISERROR('El nombre de la categoria no puede estar vacio.',16,1);
+		RETURN;
+	END
+
+	IF EXISTS (SELECT 1 FROM Categorias WHERE LOWER(Nombre) = LOWER(@Nombre))
+	BEGIN
+	RAISERROR('Ya existe una categoria con ese nombre.',16,1);
+	RETURN;
+	END
+	INSERT INTO Categorias (nombre)
+	VALUES (@Nombre)
+
+	SET @NuevoIDCategoria = SCOPE_IDENTITY();
+
+	PRINT 'Categoria agregada correctamente.';
+	END
+
+
+
+	-- Necesario para poder pasar varios productos (ID, cantidad, precio) 
+	CREATE TYPE DetallesVentaType AS TABLE (
+    IDProducto INT NOT NULL,
+    Cantidad SMALLINT NOT NULL CHECK (Cantidad > 0),
+    PrecioUnitario MONEY NOT NULL CHECK (PrecioUnitario > 0)
+);
+
+CREATE PROCEDURE sp_AgregarVenta
+    @IDCliente INT,
+    @IDEmpleado SMALLINT,
+    @DetalleVenta DetallesVentaType READONLY,
+    @NuevoIDVenta INT OUTPUT
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    -- Validaciones.
+    IF NOT EXISTS (SELECT 1 FROM Clientes WHERE IDCliente = @IDCliente AND Activo = 1)
+    BEGIN
+        RAISERROR('Cliente no válido o inactivo.', 16, 1);
+        RETURN;
+    END
+
+    IF NOT EXISTS (SELECT 1 FROM Empleados WHERE IDEmpleado = @IDEmpleado AND Activo = 1)
+    BEGIN
+        RAISERROR('Empleado no válido o inactivo.', 16, 1);
+        RETURN;
+    END
+
+    -- Calcular total
+    DECLARE @Total MONEY;
+    SELECT @Total = SUM(Cantidad * PrecioUnitario) FROM @DetalleVenta;
+
+    IF @Total IS NULL OR @Total <= 0
+    BEGIN
+        RAISERROR('El total de la venta no puede ser cero o nulo.', 16, 1);
+        RETURN;
+    END
+
+    -- Insertar venta
+    INSERT INTO Ventas (IDCliente, IDEmpleado, Total)
+    VALUES (@IDCliente, @IDEmpleado, @Total);
+
+    SET @NuevoIDVenta = SCOPE_IDENTITY();
+
+    -- Insertar detalles
+    INSERT INTO DetallesVenta (IDVenta, IDProducto, Cantidad, PrecioUnitario)
+    SELECT @NuevoIDVenta, IDProducto, Cantidad, PrecioUnitario
+    FROM @DetalleVenta;
+
+    PRINT 'Venta registrada correctamente.';
+END
+
+-- Primer Trigger de la BD, para actualizar stock.
+
+CREATE TRIGGER tr_ActualizarStock
+ON DetallesVenta
+AFTER INSERT
+AS
+BEGIN
+    UPDATE P
+    SET Stock = Stock - I.Cantidad
+    FROM Productos P
+    JOIN inserted I ON P.IDProducto = I.IDProducto;
+END;
+
+GO
+
+CREATE TRIGGER tr_ActualizarTotalVenta
+ON DetallesVenta
+AFTER INSERT, UPDATE, DELETE
+AS
+BEGIN
+
+	UPDATE V --Modifica la tabla ventas
+	SET Total = (
+	SELECT COALESCE (SUM(Subtotal),0)
+	FROM DetallesVenta DV
+	WHERE DV.IDVenta = V.IDVenta
+	)--Calcula el nuevo total para esa venta, si no hay detalles da null con coalesce lo convierte en 0
+	
+	FROM Ventas V -- aplica el update solo a las ventas involucradas
+	WHERE V.IDVenta IN (--Selecciona todas las ventas que los detalles se hayan tocado
+	SELECT IDVenta FROM inserted--Los detalles nuevos 
+	UNION--Se asegura que no se repita el mismo IDVenta
+	SELECT IDVenta FROM deleted--Detalles que fueron borrados o modificados
+	);
+	END
+	GO
+
+
+CREATE TRIGGER tr_NoVentasAClientesInactivos
+ON Ventas
+AFTER INSERT
+	AS 
+BEGIN
+--Si algun cliente de los nuevos registros insertados esta inactivo, cancela la venta.
+		IF EXISTS (
+		SELECT 1
+		FROM inserted i
+		JOIN Clientes c ON i.IDCliente = c.IDCliente
+		WHERE c.Activo = 0
+		)
+	BEGIN
+		RAISERROR ('No se puede realizar una venta a un cliente inactivo.', 16,1);
+		ROLLBACK TRANSACTION;--Cancela la transaccion, asi no inserta registro
+		RETURN;
+	END
+END
+>>>>>>> Stashed changes
