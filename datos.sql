@@ -34,7 +34,6 @@ INSERT INTO Productos (IDCategoria, Nombre, Precio, Stock) VALUES
 
 	INSERT INTO Productos (IDCategoria, Nombre, Precio, Stock) VALUES (6, 'Pizza Roquefort',2300,9);
 	--Para probar el view de productos stock bajo;
-	
 
 
 -- Empleados
@@ -49,8 +48,10 @@ INSERT INTO Empleados (Nombre, Apellido, DNI, Telefono, Puesto, Sueldo) VALUES
     ('Laura', 'Sosa', '33245678', '1177112233', 'Pastelera', 375000),
     ('Diego', 'Ríos', '34356789', '1155112233', 'Delivery', 310000);
 
+
 	SELECT * From Clientes;
 	SELECT * FROM Empleados;
+
 -- Clientes
 INSERT INTO Clientes (Nombre, Apellido, DNI, Telefono, Email, Direccion) VALUES 
     ('Ana', 'García', '32999111', '1177889900', 'ana.garcia@mail.com', 'Calle 123'),
@@ -105,6 +106,7 @@ INSERT INTO DetallesVenta (IDVenta, IDProducto, Cantidad, PrecioUnitario) VALUES
 
 
 	---funcion para reiniciar los contadores de los id autoincrementables.
+
 	/*
 	DBCC CHECKIDENT ('DetallesVenta', RESEED, 0);
 	DBCC CHECKIDENT ('Empleados', RESEED, 0);

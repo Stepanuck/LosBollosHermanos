@@ -88,7 +88,9 @@ JOIN Clientes C ON V.IDCliente = C.IDCliente
 JOIN Empleados E ON V.IDEmpleado = E.IDEmpleado
 JOIN Productos P ON DV.IDProducto = P.IDProducto;
 
+ agregarProcedimientos
 ---------------------------------------------------------------------
+
 
 CREATE VIEW vw_TotalVendidoPorProducto AS
 SELECT 
@@ -264,6 +266,19 @@ Create Procedure sp_BajaCliente
 as
 Begin
     Set Nocount On;
+
+	IF NOT EXISTS (SELECT 1 FROM Clientes WHERE IDCliente = @IDCliente)
+	BEGIN
+		RAISERROR('El cliente no existe.',16,1);
+		RETURN;
+	END
+
+	IF EXISTS (SELECT 1 FROM Clientes WHERE IDCliente = @IDCliente AND Activo = 0)
+	BEGIN
+		RAISERROR('El cliente ya estaba dado de baja.',16,1);
+		RETURN;
+	END
+
     Update Clientes Set Activo = 0 Where IDCliente = @IDCliente;
     Print 'Cliente dado de baja.';
 End
@@ -333,7 +348,13 @@ BEGIN
 	SELECT * FROM Empleados WHERE Activo = 0
 END
 
+
 ---------------------------------------------------------------------
+
+exec sp_ListarEmpleadosActivos
+exec sp_ListarEmpleadosInactivos
+
+
 CREATE PROCEDURE sp_ModificarEmpleado
 @IDEmpleado smallint,
 @Nombre varchar(50),
@@ -348,7 +369,7 @@ BEGIN
 	--verificamos que exista
 	IF NOT EXISTS (SELECT 1 FROM Empleados WHERE IDEmpleado = @IDEmpleado)
 	BEGIN
-	RAISEERROR('El empleado no existe.',16,1);
+	RAISERROR('El empleado no existe.',16,1);
 	RETURN;
 	END
 	--Validaciones
@@ -493,6 +514,14 @@ AS
 ---------------------------------------------------------------------
 
 
+
+	-- Necesario para poder pasar varios productos (ID, cantidad, precio) 
+	CREATE TYPE DetallesVentaType AS TABLE (
+    IDProducto INT NOT NULL,
+    Cantidad SMALLINT NOT NULL CHECK (Cantidad > 0),
+    PrecioUnitario MONEY NOT NULL CHECK (PrecioUnitario > 0)
+);
+
 CREATE PROCEDURE sp_AgregarVenta
     @IDCliente INT,
     @IDEmpleado SMALLINT,
@@ -505,12 +534,15 @@ BEGIN
     -- Validaciones.
     IF NOT EXISTS (SELECT 1 FROM Clientes WHERE IDCliente = @IDCliente AND Activo = 1)
     BEGIN
+
         RAISERROR('Cliente no v�lido o inactivo.', 16, 1);
+
         RETURN;
     END
 
     IF NOT EXISTS (SELECT 1 FROM Empleados WHERE IDEmpleado = @IDEmpleado AND Activo = 1)
     BEGIN
+
         RAISERROR('Empleado no v�lido o inactivo.', 16, 1);
         RETURN;
     END
@@ -538,6 +570,7 @@ BEGIN
 
     PRINT 'Venta registrada correctamente.';
 END
+
 ---------------------------------------------------------------------
 -- Primer Trigger de la BD, para actualizar stock.
 
