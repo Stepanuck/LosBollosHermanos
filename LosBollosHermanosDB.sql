@@ -87,6 +87,8 @@ JOIN Clientes C ON V.IDCliente = C.IDCliente
 JOIN Empleados E ON V.IDEmpleado = E.IDEmpleado
 JOIN Productos P ON DV.IDProducto = P.IDProducto;
 
+
+
 CREATE VIEW vw_TotalVendidoPorProducto AS
 SELECT 
     P.IDProducto,
@@ -226,9 +228,9 @@ exec sp_AgregarClientes 'Lisandro','Ferreira','31981223','47441234','lisandro@al
 exec sp_AgregarClientes 'Valeria', 'Mendoza', '27890123', '1123456789', 'valeria.mendoza@email.com', 'Calle Falsa 123';
 exec sp_AgregarClientes 'Rodrigo', 'Carrizo', '30456789', '1133344455', 'rodrigo.carrizo@email.com', 'Av Siempre Viva 742';
 exec sp_AgregarClientes 'Martina', 'Paredes', '33222111', '1166677788', 'martina.paredes@email.com', 'Pasaje Las Rosas 450';
-exec sp_AgregarClientes 'Tomás', 'Quiroga', '34567123', '1144556677', 'tomas.quiroga@email.com', 'Av Belgrano 1500';
-exec sp_AgregarClientes 'Camila', 'López', '31234567', '1177889900', 'camila.lopez@email.com', 'Calle Mitre 987';
-exec sp_AgregarClientes 'Julián', 'Escobar', '33669988', '1133221100', 'julian.escobar@email.com', 'Boulevard Oroño 202';
+exec sp_AgregarClientes 'TomÃ¡s', 'Quiroga', '34567123', '1144556677', 'tomas.quiroga@email.com', 'Av Belgrano 1500';
+exec sp_AgregarClientes 'Camila', 'LÃ³pez', '31234567', '1177889900', 'camila.lopez@email.com', 'Calle Mitre 987';
+exec sp_AgregarClientes 'JuliÃ¡n', 'Escobar', '33669988', '1133221100', 'julian.escobar@email.com', 'Boulevard OroÃ±o 202';
 
 Go
 
@@ -432,13 +434,13 @@ BEGIN
     -- Validaciones.
     IF NOT EXISTS (SELECT 1 FROM Clientes WHERE IDCliente = @IDCliente AND Activo = 1)
     BEGIN
-        RAISERROR('Cliente no válido o inactivo.', 16, 1);
+        RAISERROR('Cliente no vÃ¡lido o inactivo.', 16, 1);
         RETURN;
     END
 
     IF NOT EXISTS (SELECT 1 FROM Empleados WHERE IDEmpleado = @IDEmpleado AND Activo = 1)
     BEGIN
-        RAISERROR('Empleado no válido o inactivo.', 16, 1);
+        RAISERROR('Empleado no vÃ¡lido o inactivo.', 16, 1);
         RETURN;
     END
 
