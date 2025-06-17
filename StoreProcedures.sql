@@ -84,10 +84,30 @@ END
 	END
 	GO
 	---------------------------------------------------------------------
+<<<<<<< agregarProcedimientos
+CREATE PROCEDURE sp_ListarClientes
+AS
+BEGIN
+SELECT * FROM Clientes
+END
+
+
+Create Procedure sp_ListarClientesActivos
+As
+Begin
+Select * From Clientes WHERE Activo = 1
+End
+
+Create Procedure sp_ListarClientesInactivos
+As
+Begin
+Select * From Clientes WHERE Activo = 0
+=======
 Create Procedure sp_ListarClientes -- Segundo Sp para listar clientes.
 As
 Begin
 Select * From Clientes
+>>>>>>> main
 End
 
 Go
@@ -100,19 +120,64 @@ exec sp_AgregarClientes 'Rodrigo', 'Carrizo', '30456789', '1133344455', 'rodrigo
 exec sp_AgregarClientes 'Martina', 'Paredes', '33222111', '1166677788', 'martina.paredes@email.com', 'Pasaje Las Rosas 450';
 exec sp_AgregarClientes 'Tomas', 'Quiroga', '34567123', '1144556677', 'tomas.quiroga@email.com', 'Av Belgrano 1500';
 exec sp_AgregarClientes 'Camila', 'Lopez', '31234567', '1177889900', 'camila.lopez@email.com', 'Calle Mitre 987';
+<<<<<<< agregarProcedimientos
+exec sp_AgregarClientes 'Julian', 'Escobar', '33669988', '1133221100', 'julian.escobar@email.com', 'Boulevard Orono 202';
+=======
 exec sp_AgregarClientes 'Julian', 'Escobar', '33669988', '1133221100', 'julian.escobar@email.com', 'Boulevard Oro�o 202';
+>>>>>>> main
 
 Go
 
 exec sp_ListarClientes;
 
+<<<<<<< agregarProcedimientos
+CREATE PROCEDURE sp_AltaCliente
+	@IDCliente int
+	AS
+	BEGIN
+		SET NOCOUNT ON;
+	BEGIN TRY
+		IF NOT EXISTS (SELECT 1 FROM Clientes WHERE IDCliente = @IDCliente)
+		BEGIN
+			RAISERROR('El cliente no existe.',16,1);
+			RETURN;
+		END
+
+		IF EXISTS (SELECT 1 FROM Clientes WHERE IDCliente = @IDCliente AND Activo = 1)
+		BEGIN
+			RAISERROR('El cliente ya esta activo',16,1);
+			RETURN;
+		END
+
+		UPDATE Clientes SET Activo = 1 WHERE IDCliente = @IDCliente;
+		PRINT 'Cliente dado de alta con exito.';
+	END TRY
+	BEGIN CATCH
+
+	DECLARE @Mensaje NVARCHAR(4000);
+	SET @Mensaje = 'ERROR En el procedimiento alta de cliente (sp_AltaCliente). '
+				+ 'Revise los datos o llame a los de sistemas. '
+				+ 'Detalles: ' + ERROR_MESSAGE();
+
+	RAISERROR(@Mensaje,16,1);
+
+	END CATCH
+END
+
+		
+=======
+>>>>>>> main
 ---------------------------------------------------------------------
 Create Procedure sp_BajaCliente
     @IDCliente int
 as
 Begin
     Set Nocount On;
+<<<<<<< agregarProcedimientos
+	BEGIN TRY
+=======
 
+>>>>>>> main
 	IF NOT EXISTS (SELECT 1 FROM Clientes WHERE IDCliente = @IDCliente)
 	BEGIN
 		RAISERROR('El cliente no existe.',16,1);
@@ -127,6 +192,19 @@ Begin
 
     Update Clientes Set Activo = 0 Where IDCliente = @IDCliente;
     Print 'Cliente dado de baja.';
+<<<<<<< agregarProcedimientos
+	END TRY
+	BEGIN CATCH
+	
+	DECLARE @Mensaje NVARCHAR(4000);
+	SET @Mensaje = 'ERROR En el procedimiento baja de cliente (sp_BajaCliente). '
+				+ 'Revise los datos o llame a los de sistemas. '
+				+ 'Detalles: ' + ERROR_MESSAGE();
+
+	RAISERROR(@Mensaje,16,1);
+	END CATCH
+=======
+>>>>>>> main
 End
 
 Go
@@ -138,12 +216,22 @@ CREATE PROCEDURE sp_AgregarEmpleado
 @Dni varchar(15),
 @Telefono varchar(20) = Null,
 @Puesto varchar(30),
+<<<<<<< agregarProcedimientos
+@Sueldo money
+
+=======
 @Sueldo money,
 @NuevoIDEmpleado smallint OUTPUT
+>>>>>>> main
 AS
 BEGIN			---LTRIM FUNCION QUE BORRA TODO LOS ESPACIOS EN BLANCO DEL INICIO 
 				---RTRIM FUNCION QUE BORRA TODO LOS ESPACIOS EN BLANCO DEL FINAL
 	SET NOCOUNT ON;
+<<<<<<< agregarProcedimientos
+	BEGIN TRY
+		BEGIN TRANSACTION;
+=======
+>>>>>>> main
 	IF @Nombre IS NULL OR LTRIM(RTRIM(@Nombre)) = ''
 BEGIN
 		RAISERROR('El nombre no puede estar vacio.',16,1);
@@ -177,6 +265,27 @@ END
 INSERT INTO Empleados(Nombre, Apellido, DNI, Telefono, Puesto, Sueldo)
 VALUES (@Nombre,@Apellido,@Dni,@Telefono,@Puesto,@Sueldo);
 
+<<<<<<< agregarProcedimientos
+	COMMIT TRANSACTION;
+	PRINT 'Empleado agregado correctamente.';
+	END TRY
+	BEGIN CATCH
+
+	IF @@TRANCOUNT > 0
+		ROLLBACK TRANSACTION;
+
+	DECLARE @Mensaje NVARCHAR(4000);
+	SET @Mensaje = 'ERROR En el procedimiento agregar un empleado (sp_AgregarEmpleado). '
+				+ 'Revise los datos o llame a los de sistemas. '
+				+ 'Detalles: ' + ERROR_MESSAGE();
+
+	RAISERROR(@Mensaje,16,1);
+	
+	END CATCH
+	END
+	SELECT * FROM Empleados;
+-------------------------------------------------------------------------------------------
+=======
 	SET @NuevoIDEmpleado = SCOPE_IDENTITY();
 	PRINT 'Empleado agregado correctamente.';
 	END
@@ -200,6 +309,7 @@ END
 exec sp_ListarEmpleadosActivos
 exec sp_ListarEmpleadosInactivos
 
+>>>>>>> main
 
 CREATE PROCEDURE sp_ModificarEmpleado
 @IDEmpleado smallint,
