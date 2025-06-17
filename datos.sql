@@ -11,7 +11,7 @@ INSERT INTO Categorias (nombre) VALUES
     ('Desayunos'),
     ('Vegano');
 
-
+	
 -- Productos
 INSERT INTO Productos (IDCategoria, Nombre, Precio, Stock) VALUES 
     (1, 'Pan francés', 300, 80),
@@ -114,7 +114,12 @@ INSERT INTO DetallesVenta (IDVenta, IDProducto, Cantidad, PrecioUnitario) VALUES
 	DBCC CHECKIDENT ('Clientes', RESEED, 0);
 	DBCC CHECKIDENT ('Productos', RESEED, 0);
 	DBCC CHECKIDENT ('Ventas', RESEED, 0);
-
+	SELECT * FROM Empleados;
+	SELECT * FROM Categorias;
+	SELECT * FROM Clientes;
+	SELECT * FROM Ventas;
+	SELECT * FROM DetallesVenta;
+	SELECT * FROM Productos;
 
 	USE LosBollosHermanos;
 	GO
