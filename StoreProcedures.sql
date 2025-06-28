@@ -1,6 +1,7 @@
-﻿	USE LosBollosHermanos;
+﻿USE LosBollosHermanos;
 -- Crear Procedimientos Almacenados.
 --El primer procedimiento almacenado se encargara de Agregar Clientes.
+GO
 
 --Clientes
 Create Procedure sp_AgregarClientes
@@ -28,9 +29,8 @@ Insert into Clientes(Nombre,Apellido,DNI,Telefono,Email,Direccion)
 Values(@Nombre,@Apellido,@Dni,@Telefono,@Email,@Direccion)
 Print 'Cliente Agregado correctamente';
 End
-
-Go
----------------------------------------------------------------------
+GO
+--------------------------------------------------------------------------
 CREATE PROCEDURE sp_ModificarCliente
 @IDCliente int,
 @Nombre varchar(50),
@@ -82,56 +82,40 @@ END
 	
 	PRINT 'Cliente modificado correctamente.';
 	END
-	GO
-	---------------------------------------------------------------------
-<<<<<<< agregarProcedimientos
+GO
+--------------------------------------------------------------------------
 CREATE PROCEDURE sp_ListarClientes
 AS
 BEGIN
 SELECT * FROM Clientes
 END
-
-
+GO
+--------------------------------------------------------------------------v
 Create Procedure sp_ListarClientesActivos
 As
 Begin
 Select * From Clientes WHERE Activo = 1
 End
-
+GO
+--------------------------------------------------------------------------
 Create Procedure sp_ListarClientesInactivos
 As
 Begin
 Select * From Clientes WHERE Activo = 0
-=======
-Create Procedure sp_ListarClientes -- Segundo Sp para listar clientes.
-As
-Begin
-Select * From Clientes
->>>>>>> main
 End
-
-Go
----------------------------------------------------------------------
---Agregar Clientes.
-exec sp_AgregarClientes 'Gabriel','Dolce','35982274','47441212','gabriel@alumnos.utn.com','Av Monroe 2020';
-exec sp_AgregarClientes 'Lisandro','Ferreira','31981223','47441234','lisandro@alumnos.utn.com','Av Cabildo 2030';
-exec sp_AgregarClientes 'Valeria', 'Mendoza', '27890123', '1123456789', 'valeria.mendoza@email.com', 'Calle Falsa 123';
-exec sp_AgregarClientes 'Rodrigo', 'Carrizo', '30456789', '1133344455', 'rodrigo.carrizo@email.com', 'Av Siempre Viva 742';
-exec sp_AgregarClientes 'Martina', 'Paredes', '33222111', '1166677788', 'martina.paredes@email.com', 'Pasaje Las Rosas 450';
-exec sp_AgregarClientes 'Tomas', 'Quiroga', '34567123', '1144556677', 'tomas.quiroga@email.com', 'Av Belgrano 1500';
-exec sp_AgregarClientes 'Camila', 'Lopez', '31234567', '1177889900', 'camila.lopez@email.com', 'Calle Mitre 987';
-<<<<<<< agregarProcedimientos
-exec sp_AgregarClientes 'Julian', 'Escobar', '33669988', '1133221100', 'julian.escobar@email.com', 'Boulevard Orono 202';
-=======
-exec sp_AgregarClientes 'Julian', 'Escobar', '33669988', '1133221100', 'julian.escobar@email.com', 'Boulevard Oro�o 202';
->>>>>>> main
-
-Go
-
-exec sp_ListarClientes;
-
-<<<<<<< agregarProcedimientos
-CREATE PROCEDURE sp_AltaCliente
+GO
+--------------------------------------------------------------------------
+CREATE PROCEDURE sp_BuscarClientePorDni
+	@DNI VARCHAR (15)
+	AS 
+	BEGIN 
+		SET NOCOUNT ON;
+		SELECT * FROM Clientes WHERE DNI = @DNI;
+	END
+	GO
+--------------------------------------------------------------------------
+--Alta Logico
+Create Procedure sp_AltaCliente
 	@IDCliente int
 	AS
 	BEGIN
@@ -160,24 +144,17 @@ CREATE PROCEDURE sp_AltaCliente
 				+ 'Detalles: ' + ERROR_MESSAGE();
 
 	RAISERROR(@Mensaje,16,1);
-
 	END CATCH
 END
-
-		
-=======
->>>>>>> main
----------------------------------------------------------------------
+GO
+--------------------------------------------------------------------------
+--Baja Logica
 Create Procedure sp_BajaCliente
     @IDCliente int
 as
 Begin
     Set Nocount On;
-<<<<<<< agregarProcedimientos
 	BEGIN TRY
-=======
-
->>>>>>> main
 	IF NOT EXISTS (SELECT 1 FROM Clientes WHERE IDCliente = @IDCliente)
 	BEGIN
 		RAISERROR('El cliente no existe.',16,1);
@@ -192,7 +169,6 @@ Begin
 
     Update Clientes Set Activo = 0 Where IDCliente = @IDCliente;
     Print 'Cliente dado de baja.';
-<<<<<<< agregarProcedimientos
 	END TRY
 	BEGIN CATCH
 	
@@ -203,69 +179,58 @@ Begin
 
 	RAISERROR(@Mensaje,16,1);
 	END CATCH
-=======
->>>>>>> main
 End
-
-Go
----------------------------------------------------------------------
- ---- EMPLEADOS
+GO
+--------------------------------------------------------------------------
+--Empleados
 CREATE PROCEDURE sp_AgregarEmpleado
 @Nombre varchar(50),
 @Apellido varchar(50),
 @Dni varchar(15),
 @Telefono varchar(20) = Null,
 @Puesto varchar(30),
-<<<<<<< agregarProcedimientos
-@Sueldo money
-
-=======
 @Sueldo money,
 @NuevoIDEmpleado smallint OUTPUT
->>>>>>> main
 AS
 BEGIN			---LTRIM FUNCION QUE BORRA TODO LOS ESPACIOS EN BLANCO DEL INICIO 
 				---RTRIM FUNCION QUE BORRA TODO LOS ESPACIOS EN BLANCO DEL FINAL
 	SET NOCOUNT ON;
-<<<<<<< agregarProcedimientos
 	BEGIN TRY
 		BEGIN TRANSACTION;
-=======
->>>>>>> main
 	IF @Nombre IS NULL OR LTRIM(RTRIM(@Nombre)) = ''
 BEGIN
 		RAISERROR('El nombre no puede estar vacio.',16,1);
-	RETURN;
+		ROLLBACK TRANSACTION; RETURN;
 END
 	IF @Apellido IS NULL OR LTRIM(RTRIM(@Apellido)) = ''
 BEGIN
 	RAISERROR('El apellido no puede estar vacio.',16,1);
-	RETURN;
+	ROLLBACK TRANSACTION; RETURN;
 END
 IF @Dni IS NULL OR LTRIM(RTRIM(@Dni)) = ''
 BEGIN
 	RAISERROR('El DNI no puede estar vacio.',16,1);
-	RETURN;
+	ROLLBACK TRANSACTION; RETURN;
 END
 IF @Puesto IS NULL OR LTRIM(RTRIM(@Puesto)) = ''
 BEGIN
 	RAISERROR('El puesto no puede estar vacio.',16,1);
-	RETURN;
+	ROLLBACK TRANSACTION; RETURN;
 END
 	IF @Sueldo IS NULL OR @Sueldo <=0
 BEGIN
 	RAISERROR ('El sueldo debe ser mayor de cero.',16,1);
-	RETURN;
+	ROLLBACK TRANSACTION; RETURN;
 END
 	IF exists (SELECT 1 FROM Empleados WHERE DNI = @Dni)
 	BEGIN
 		RAISERROR ('El DNI ingresado ya existe en la tabla empleados.',16,1);
-	RETURN;
+		ROLLBACK TRANSACTION; RETURN;
 END
 INSERT INTO Empleados(Nombre, Apellido, DNI, Telefono, Puesto, Sueldo)
 VALUES (@Nombre,@Apellido,@Dni,@Telefono,@Puesto,@Sueldo);
 
-<<<<<<< agregarProcedimientos
+	SET @NuevoIDEmpleado = SCOPE_IDENTITY();
 	COMMIT TRANSACTION;
 	PRINT 'Empleado agregado correctamente.';
 	END TRY
@@ -282,35 +247,29 @@ VALUES (@Nombre,@Apellido,@Dni,@Telefono,@Puesto,@Sueldo);
 	RAISERROR(@Mensaje,16,1);
 	
 	END CATCH
+END
+GO
+CREATE PROCEDURE sp_ListarEmpleados
+AS
+	BEGIN
+		SELECT * FROM Empleados
 	END
-	SELECT * FROM Empleados;
--------------------------------------------------------------------------------------------
-=======
-	SET @NuevoIDEmpleado = SCOPE_IDENTITY();
-	PRINT 'Empleado agregado correctamente.';
-	END
-
-
+GO
+--------------------------------------------------------------------------
 CREATE PROCEDURE sp_ListarEmpleadosActivos
 AS
 BEGIN
 	SELECT * FROM Empleados WHERE Activo = 1
 END
-
+GO
+--------------------------------------------------------------------------
 CREATE PROCEDURE sp_ListarEmpleadosInactivos
 AS
 BEGIN
 	SELECT * FROM Empleados WHERE Activo = 0
 END
-
-
----------------------------------------------------------------------
-
-exec sp_ListarEmpleadosActivos
-exec sp_ListarEmpleadosInactivos
-
->>>>>>> main
-
+GO
+--------------------------------------------------------------------------
 CREATE PROCEDURE sp_ModificarEmpleado
 @IDEmpleado smallint,
 @Nombre varchar(50),
@@ -370,10 +329,11 @@ END
 	WHERE IDEmpleado = @IDEmpleado;
 	
 	PRINT 'Empleado modificado correctamente.';
-	END
-	---------------------------------------------------------------------
-	--Baja Logica Empleado
-	CREATE PROCEDURE sp_BajaEmpleado
+END
+GO
+--------------------------------------------------------------------------
+--Baja Logica
+CREATE PROCEDURE sp_BajaEmpleado
 	@IDEmpleado SMALLINT
 	AS
 	BEGIN
@@ -396,9 +356,10 @@ END
 	
 	PRINT 'Empleado dado de baja correctamente.';
 END
----------------------------------------------------------------------
+GO
+--------------------------------------------------------------------------
 --ALTA LOGICO
-	CREATE PROCEDURE sp_altaEmpleado
+CREATE PROCEDURE sp_altaEmpleado
 	@IDEmpleado SMALLINT
 	AS
 	BEGIN
@@ -421,33 +382,24 @@ END
 	
 	PRINT 'Empleado dado de baja correctamente.';
 END
-
---SELECT * FROM Empleados;
---exec sp_BajaEmpleado 1;
---exec sp_altaEmpleado 1;
-	---------------------------------------------------------------------
-	CREATE PROCEDURE sp_ListarEmpleadosActivos
-AS
-BEGIN
-	SELECT * FROM Empleados WHERE Activo = 1
-END
----------------------------------------------------------------------
-CREATE PROCEDURE sp_ListarEmpleadosInactivos
-AS
-BEGIN
-	SELECT * FROM Empleados WHERE Activo = 0
-END
----------------------------------------------------------------------
-exec sp_ListarEmpleadosActivos
-exec sp_ListarEmpleadosInactivos
----------------------------------------------------------------------
+GO
+CREATE PROCEDURE sp_BuscarEmpleadoPorDNI
+	@DNI VARCHAR (15)
+	AS
+	BEGIN
+		SET NOCOUNT ON;
+		SELECT * FROM Empleados WHERE DNI = @DNI;
+	END
+GO
+--------------------------------------------------------------------------
+--Categorias
 CREATE PROCEDURE sp_AgregarCategoria
 @Nombre VARCHAR(50),
 @NuevoIDCategoria SMALLINT OUTPUT
 AS
-	BEGIN
+	BEGIN 
 	SET NOCOUNT ON;
-
+		BEGIN TRY
 	IF @Nombre IS NULL OR LTRIM(RTRIM(@Nombre))=''
 	BEGIN
 		RAISERROR('El nombre de la categoria no puede estar vacio.',16,1);
@@ -465,18 +417,93 @@ AS
 	SET @NuevoIDCategoria = SCOPE_IDENTITY();
 
 	PRINT 'Categoria agregada correctamente.';
+	END TRY
+	BEGIN CATCH
+		DECLARE @Mensaje NVARCHAR (4000);
+			SET @Mensaje = 'ERROR en el procedimiento agregar categoria (sp_AgregarCategoria).'
+			+ 'Revise o llame al chico de sistemas.'
+			+ 'Detalles: ' + ERROR_MESSAGE();
+			RAISERROR(@Mensaje,16,1);
+		END CATCH
 	END
+GO
+--------------------------------------------------------------------------
+--Productos
+ CREATE PROCEDURE sp_ActivarProducto
+ @IDProducto SMALLINT 
+ AS
+	BEGIN
+		SET NOCOUNT ON;
+			BEGIN TRY
+		
+		IF NOT EXISTS (SELECT 1 FROM Productos WHERE IDProducto = @IDProducto)
+			BEGIN
+			RAISERROR('No existe el producto con ese ID.', 16, 1);
+			RETURN;
+		END
 
----------------------------------------------------------------------
+		IF EXISTS (SELECT 1 FROM Productos WHERE IDProducto = @IDProducto AND ACTIVO = 1)
+			BEGIN
+			RAISERROR('El Producto ya se encuentra activo.',16,1);
+			RETURN;
+		END
+		
+		UPDATE Productos SET Activo = 1 WHERE IDProducto = @IDProducto;
+		PRINT 'El producto ha sido activado correctamente.';
+		END TRY
+		BEGIN CATCH
+			DECLARE @Mensaje NVARCHAR(4000);
+				SET @Mensaje = 'ERROR en el procedimiento activar producto (sp_ActivarProducto).'
+				+ 'Revisa o llame al chico de sistemas.'
+				+ 'Detalles: ' + ERROR_MESSAGE();
+				RAISERROR(@Mensaje,16,1);
+			END CATCH
+		END
+	GO
+--------------------------------------------------------------------------
+	CREATE PROCEDURE sp_BajaProducto
+ @IDProducto SMALLINT 
+ AS
+	BEGIN
+		SET NOCOUNT ON;
+			BEGIN TRY
+		
+		IF NOT EXISTS (SELECT 1 FROM Productos WHERE IDProducto = @IDProducto)
+			BEGIN
+			RAISERROR('No existe el producto con ese ID.', 16, 1);
+			RETURN;
+		END
+
+		IF EXISTS (SELECT 1 FROM Productos WHERE IDProducto = @IDProducto AND ACTIVO = 0)
+			BEGIN
+			RAISERROR('El Producto ya se encuentra inactivo.',16,1);
+			RETURN;
+		END
+		
+		UPDATE Productos SET Activo = 0 WHERE IDProducto = @IDProducto;
+		PRINT 'El producto ha puesto inactivo correctamente.';
+		END TRY
+		BEGIN CATCH
+			DECLARE @Mensaje NVARCHAR(4000);
+				SET @Mensaje = 'ERROR en el procedimiento baja producto (sp_BajaProducto).'
+				+ 'Revisa o llame al chico de sistemas.'
+				+ 'Detalles: ' + ERROR_MESSAGE();
+				RAISERROR(@Mensaje,16,1);
+			END CATCH
+		END
+	GO
+--------------------------------------------------------------------------
 
 
 
-	-- Necesario para poder pasar varios productos (ID, cantidad, precio) 
-	CREATE TYPE DetallesVentaType AS TABLE (
+--- Ventas
+-- Necesario para poder pasar varios productos (ID, cantidad, precio)
+CREATE TYPE DetallesVentaType AS TABLE (
     IDProducto INT NOT NULL,
     Cantidad SMALLINT NOT NULL CHECK (Cantidad > 0),
     PrecioUnitario MONEY NOT NULL CHECK (PrecioUnitario > 0)
 );
+GO
 
 CREATE PROCEDURE sp_AgregarVenta
     @IDCliente INT,
@@ -526,3 +553,5 @@ BEGIN
 
     PRINT 'Venta registrada correctamente.';
 END
+GO
+--------------------------------------------------------------------------
