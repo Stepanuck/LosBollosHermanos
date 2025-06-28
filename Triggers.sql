@@ -70,7 +70,7 @@ AFTER INSERT
 			WHERE p.Stock - i.Cantidad <0
 			)
 		BEGIN
-			RAISERROR('No se puede realizar la venta, ya que el stock sería negativo.',16,1)
+			RAISERROR('No se puede realizar la venta, ya que el stock serÃ­a negativo.',16,1)
 			ROLLBACK TRANSACTION;
 			RETURN;
 		END
