@@ -1,4 +1,3 @@
-
 USE LosBollosHermanos;
 GO
 --Views
@@ -99,4 +98,5 @@ COUNT (*) AS CantidadVentas,
 SUM (Total) AS TotalFacturado
 FROM Ventas
 GROUP BY YEAR(FechaEmision), MONTH(FechaEmision);
+
 
