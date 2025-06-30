@@ -37,7 +37,6 @@ BEGIN
 	);
 	END
 	GO
-
 ---------------------------------------------------------------------
 CREATE TRIGGER tr_NoVentasAClientesInactivos
 ON Ventas
@@ -57,4 +56,38 @@ BEGIN
 		RETURN;
 	END
 END
+GO
 ---------------------------------------------------------------------
+CREATE TRIGGER tr_EvitarStockNegativo
+ON DetallesVenta
+AFTER INSERT
+	AS
+	BEGIN
+		IF EXISTS (
+			SELECT 1
+			FROM inserted i
+			JOIN Productos p ON i.IDProducto = p.IDProducto
+			WHERE p.Stock - i.Cantidad <0
+			)
+		BEGIN
+			RAISERROR('No se puede realizar la venta, ya que el stock sería negativo.',16,1)
+			ROLLBACK TRANSACTION;
+			RETURN;
+		END
+	END
+GO
+---------------------------------------------------------------------
+CREATE TRIGGER tr_MarcarProductosSinStock
+ON Productos
+AFTER UPDATE
+	AS
+	BEGIN
+	UPDATE Productos
+	SET Activo = 0
+	WHERE Stock = 0 AND Activo = 1
+	AND IDProducto IN (
+		SELECT IDProducto FROM inserted WHERE Stock = 0
+	);
+END
+GO
+
